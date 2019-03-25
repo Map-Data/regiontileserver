@@ -1,0 +1,16 @@
+[Unit]
+Description=Tileserver for %I
+After=network.target postgresql.service
+
+[Service]
+User=tileserver
+WorkingDirectory=/opt/tileserver/workdir/tileserver
+Environment=VIRTUAL_ENV="/opt/tileserver/workdir/.pyenv"
+Environment=PATH="/opt/tileserver/workdir/.pyenv/bin:/usr/local/bin:/usr/bin:/bin:/usr/games"
+ExecStart=/opt/tileserver/workdir/tileserver/start_gunicorn.sh %I
+PrivateTmp=true
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+ 

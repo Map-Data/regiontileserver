@@ -1,0 +1,9 @@
+a_b="b"
+a_b2="a"
+database="${tile}_${a_b}"
+database_orig="${tile}_${a_b2}"
+database_port=5432
+tablespace="pg_default" #"slow2"
+database_user="osm"
+export PGPASSWORD="PASSWORD"
+dbhost="127.0.0.1"
