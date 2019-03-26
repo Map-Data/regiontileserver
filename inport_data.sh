@@ -3,7 +3,7 @@ set +e
 tile=$1
 . settings.sh
 
-cd ../workdir
+cd ~tileserver/workdir
 
 md5f1=""
 
