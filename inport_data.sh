@@ -10,7 +10,7 @@ md5f1=""
 if [[ -f ${tile}.pbf.md5 ]]; then
     md5f1=$(cat "${tile}.pbf.md5")
 fi
-wget -N TODO/extract/${tile}.pbf || exit 1
+wget -N https://map-data.de/extract/${tile}.pbf || exit 1
 md5f2=$(md5sum "${tile}.pbf" | cut -d' ' -f1)
 echo ${md5f2} > ${tile}.pbf.md5
 if [ "$md5f2" == "$md5f1" ]; then
