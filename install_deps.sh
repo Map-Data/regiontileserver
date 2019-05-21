@@ -1,5 +1,6 @@
 #! /bin/bash
 
+. settings.sh
 
 if hash apt-get 2>/dev/null; then
     echo "Using apt-get to install"
@@ -12,11 +13,11 @@ else
     exit 1
 fi
 
-sudo adduser tileserver --home /opt/tileserver/ --system
+sudo adduser tileserver --home ${homedir} --system
 
 
-mkdir ~tileserver/wordir
-cd ~tileserver/workdir
+sudo mkdir ${workdir}
+cd ${workdir}
 
 # todo: add postgress account
 

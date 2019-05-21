@@ -7,3 +7,6 @@ tablespace="pg_default" #"slow2"
 database_user="osm"
 export PGPASSWORD="PASSWORD"
 dbhost="127.0.0.1"
+
+homedir="/opt/tileserver/"
+workdir="${homedir}/workdir/"
