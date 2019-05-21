@@ -38,7 +38,7 @@ if [[ ! -f .pyenv-${vectorDatasourceVersion}/bin/activate ]]; then
     virtualenv .pyenv-${vectorDatasourceVersion} --python python2.7
     new_venv=1
 fi
-source .pyenv/bin/activate-${vectorDatasourceVersion}
+source .pyenv-${vectorDatasourceVersion}/bin/activate
 
 cd tileserver-${tileserverVersion}
 git checkout ${tileserverVersion}
