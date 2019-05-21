@@ -21,8 +21,8 @@ if [[ "$md5f2" == "$md5f1" ]]; then
     exit 0
 fi
 
-sudo -su postgres createdb -D ${tablespace} -O ${database_user} -p ${database_port} ${database}
-sudo -su postgres psql -p ${database_port} -d ${database} -c 'CREATE EXTENSION postgis; CREATE EXTENSION hstore;'
+echo "CREATE DATABASE ${database} OWNER ${database_user} TABLESPACE ${tablespace}"| psql -Xq -p  ${database_port} -U ${database_user} -h ${dbhost}
+echo "CREATE EXTENSION postgis; CREATE EXTENSION hstore;"| psql -Xq -p  ${database_port} -U ${database_user} -h ${dbhost}
 if [[ ! -d vector-datasource-${vectorDatasourceVersion} ]]; then
     git clone https://github.com/mapzen/vector-datasource.git vector-datasource-${vectorDatasourceVersion}
     vector_cloned=1
@@ -72,7 +72,7 @@ cd ../..
 
 
 echo "DROP DATABASE \"${database_orig}\"" | psql -Xq -p  ${database_port} -U ${database_user} -h ${dbhost}
-sudo -su postgres psql -p ${database_port}  -c "ALTER DATABASE \"${database}\" RENAME TO \"${database_orig}\""
+echo "ALTER DATABASE \"${database}\" RENAME TO \"${database_orig}\"" | psql -Xq -p  ${database_port} -U ${database_user} -h ${dbhost}
 sed "s/dbnames: \[osm\]/dbnames: \[${database_orig}\]/" tileserver/config.yaml.sample > tileserver/config.${tile}.yaml
 sed -i "s/password:/password: ${PGPASSWORD}/" tileserver/config.${tile}.yaml
 
