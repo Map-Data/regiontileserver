@@ -21,8 +21,8 @@ if [[ "$md5f2" == "$md5f1" ]]; then
     exit 0
 fi
 
-echo "CREATE DATABASE ${database} OWNER ${database_user} TABLESPACE ${tablespace}"| psql -Xq -p  ${database_port} -U ${database_user} -h ${dbhost}
-echo "CREATE EXTENSION postgis; CREATE EXTENSION hstore;"| psql -Xq -p  ${database_port} -U ${database_user} -h ${dbhost}
+echo "CREATE DATABASE \"${database}\" OWNER ${database_user} TABLESPACE ${tablespace};"| psql -Xq -p  ${database_port} -U ${database_user} -h ${dbhost}
+echo "CREATE EXTENSION postgis; CREATE EXTENSION hstore;"| psql -Xq -p  ${database_port} -U ${database_user} -h ${dbhost} -d ${database}
 if [[ ! -d vector-datasource-${vectorDatasourceVersion} ]]; then
     git clone https://github.com/mapzen/vector-datasource.git vector-datasource-${vectorDatasourceVersion}
     vector_cloned=1
@@ -62,6 +62,7 @@ rm ../${tile}.pbf
 
 cd data
 
+# TODO: bei fehlern am anfang macht er das hier gerne nicht
 if [[ ! -z ${new_venv+x} ]]; then
     python bootstrap.py
     make -f Makefile-import-data
@@ -73,8 +74,8 @@ cd ../..
 
 echo "DROP DATABASE \"${database_orig}\"" | psql -Xq -p  ${database_port} -U ${database_user} -h ${dbhost}
 echo "ALTER DATABASE \"${database}\" RENAME TO \"${database_orig}\"" | psql -Xq -p  ${database_port} -U ${database_user} -h ${dbhost}
-sed "s/dbnames: \[osm\]/dbnames: \[${database_orig}\]/" tileserver/config.yaml.sample > tileserver/config.${tile}.yaml
-sed -i "s/password:/password: ${PGPASSWORD}/" tileserver/config.${tile}.yaml
+sed "s/dbnames: \[osm\]/dbnames: \[${database_orig}\]/" tileserver-${tileserverVersion}/config.yaml.sample > tileserver-${tileserverVersion}/config.${tile}.yaml
+sed -i "s/password:/password: ${PGPASSWORD}/" tileserver-${tileserverVersion}/config.${tile}.yaml
 
 if ! grep "${tile}" server_list; then
 	echo ${tile} >> server_list
@@ -90,10 +91,12 @@ else
 fi
 if [[ ! -f version_mapping ]]; then
     echo "declare -A VERSIONS\n" > version_mapping
+    echo "declare -A VERSIONS_TILESERVER\n" >> version_mapping
 fi
 mv version_mapping version_mapping.tmp
 cat version_mapping.tmp | grep -v "${tile}" > version_mapping
 echo "VERSIONS[${tile}]=${vectorDatasourceVersion}" >> version_mapping
+echo "VERSIONS_TILESERVER[${tile}]=${tileserverVersion}" >> version_mapping
 
 
 echo "DONE ${tile}"
