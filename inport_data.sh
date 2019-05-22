@@ -4,7 +4,7 @@ tile=$1
 . settings.sh
 
 tileserverVersion="v2.2.0"
-vectorDatasourceVersion="v1.5.0"
+vectorDatasourceVersion="v1.7.0"
 
 cd ${workdir}
 
@@ -76,6 +76,7 @@ echo "DROP DATABASE \"${database_orig}\"" | psql -Xq -p  ${database_port} -U ${d
 echo "ALTER DATABASE \"${database}\" RENAME TO \"${database_orig}\"" | psql -Xq -p  ${database_port} -U ${database_user} -h ${dbhost}
 sed "s/dbnames: \[osm\]/dbnames: \[${database_orig}\]/" tileserver-${tileserverVersion}/config.yaml.sample > tileserver-${tileserverVersion}/config.${tile}.yaml
 sed -i "s/password:/password: ${PGPASSWORD}/" tileserver-${tileserverVersion}/config.${tile}.yaml
+sed -i "s/vector-datasource/vector-datasource-${vectorDatasourceVersion}/" tileserver-${tileserverVersion}/config.${tile}.yaml
 
 if ! grep "${tile}" server_list; then
 	echo ${tile} >> server_list
@@ -90,8 +91,8 @@ else
     systemctl restart tileserver-gunicorn@${tile}
 fi
 if [[ ! -f version_mapping ]]; then
-    echo "declare -A VERSIONS\n" > version_mapping
-    echo "declare -A VERSIONS_TILESERVER\n" >> version_mapping
+    echo "declare -A VERSIONS" > version_mapping
+    echo "declare -A VERSIONS_TILESERVER" >> version_mapping
 fi
 mv version_mapping version_mapping.tmp
 cat version_mapping.tmp | grep -v "${tile}" > version_mapping

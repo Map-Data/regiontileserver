@@ -25,7 +25,8 @@ cd ${workdir}
 
 
 #todo: make port configurable, the first tileserver will use this port plus 1
-echo "declare -A PORTS\nPORTS[dummy]=8000">port_mapping
+echo "declare -A PORTS">port_mapping
+echo "PORTS[dummy]=8000">>port_mapping
 touch server_list
 
 chown -hR tileserver ~tileserver
