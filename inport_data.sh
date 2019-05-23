@@ -51,7 +51,7 @@ cd ../vector-datasource-${vectorDatasourceVersion}
 git checkout ${vectorDatasourceVersion}
 
 if [[ ! -z ${new_venv+x} ]]; then
-    pip install -U -r requirements.txt
+    pip install -r requirements.txt
     python setup.py develop
 fi
 
@@ -77,6 +77,10 @@ echo "ALTER DATABASE \"${database}\" RENAME TO \"${database_orig}\"" | psql -Xq 
 sed "s/dbnames: \[osm\]/dbnames: \[${database_orig}\]/" tileserver-${tileserverVersion}/config.yaml.sample > tileserver-${tileserverVersion}/config.${tile}.yaml
 sed -i "s/password:/password: ${PGPASSWORD}/" tileserver-${tileserverVersion}/config.${tile}.yaml
 sed -i "s/vector-datasource/vector-datasource-${vectorDatasourceVersion}/" tileserver-${tileserverVersion}/config.${tile}.yaml
+# The following two lines als effect the unused debugserver settings
+sed -i "s/host:/host: ${dbhost}/" tileserver-${tileserverVersion}/config.${tile}.yaml
+sed -i "s/port:/port: ${database_port}/" tileserver-${tileserverVersion}/config.${tile}.yaml
+sed -i "s/user:/user: ${database_user}/" tileserver-${tileserverVersion}/config.${tile}.yaml
 
 if ! grep "${tile}" server_list; then
 	echo ${tile} >> server_list
