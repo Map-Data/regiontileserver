@@ -77,5 +77,7 @@ Currently the used data is sliced at most once per week. To reimport the data ju
 import the data into a second Database (defaults to <tile>_b) and switch them at the end so the old data gets served until
 the import finishes. 
 
-**Warning:** This will need the database size a second time during import!
+The reimport.sh script will import all installed regions. so you can add this script to the (root) crontab
+
+**Warning:** This will need the database size (of the biggest region) a second time during import!
 
