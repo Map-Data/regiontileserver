@@ -78,9 +78,9 @@ sed "s/dbnames: \[osm\]/dbnames: \[${database_orig}\]/" tileserver-${tileserverV
 sed -i "s/password:/password: ${PGPASSWORD}/" tileserver-${tileserverVersion}/config.${tile}.yaml
 sed -i "s/vector-datasource/vector-datasource-${vectorDatasourceVersion}/" tileserver-${tileserverVersion}/config.${tile}.yaml
 # The following two lines als effect the unused debugserver settings
-sed -i "s/host:/host: ${dbhost}/" tileserver-${tileserverVersion}/config.${tile}.yaml
-sed -i "s/port:/port: ${database_port}/" tileserver-${tileserverVersion}/config.${tile}.yaml
-sed -i "s/user:/user: ${database_user}/" tileserver-${tileserverVersion}/config.${tile}.yaml
+sed -i "s/host: localhost/host: ${dbhost}/" tileserver-${tileserverVersion}/config.${tile}.yaml
+sed -i "s/port: 5432/port: ${database_port}/" tileserver-${tileserverVersion}/config.${tile}.yaml
+sed -i "s/user: osm/user: ${database_user}/" tileserver-${tileserverVersion}/config.${tile}.yaml
 
 if ! grep "${tile}" server_list; then
 	echo ${tile} >> server_list
