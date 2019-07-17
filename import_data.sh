@@ -4,7 +4,7 @@ tile=$1
 . settings.sh
 
 tileserverVersion="v2.2.0"
-vectorDatasourceVersion="v1.7.0"
+vectorDatasourceVersion="v1.8.0"
 
 cd ${workdir}
 
