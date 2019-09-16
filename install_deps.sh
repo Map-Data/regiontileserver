@@ -1,13 +1,13 @@
 #! /bin/bash
-
+set -e
 . settings.sh
 
 if hash apt-get 2>/dev/null; then
     echo "Using apt-get to install"
-    sudo apt-get install git python-virtualenv osm2pgsl python-pip python-dev gcc postgis
+    sudo apt-get install git python-virtualenv osm2pgsql python-pip python-dev gcc postgis unzip
 elif hash dfn 2>/dev/null; then
     echo "Using DFN to install"
-    sudo dnf install osm2pgsql python2-virtualenv git python2-pip python2-devel postgis gcc
+    sudo dnf install osm2pgsql python2-virtualenv git python2-pip python2-devel postgis gcc unzip
 else
     echo "Unknown package manager"
     exit 1
