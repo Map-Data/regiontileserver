@@ -1,28 +1,38 @@
 #! /usr/bin/env bash
 set -e
 tile=$1
-. settings.sh
+source settings.sh
 
 tileserverVersion="v2.2.0"
 vectorDatasourceVersion="v1.8.0"
 
 cd ${workdir}
 
-md5f1=""
+wget -N https://map-data.de/extract/${tile}.sql.gz
 
-if [[ -f ${tile}.pbf.md5 ]]; then
-    md5f1=$(cat "${tile}.pbf.md5")
-fi
-wget -N https://map-data.de/extract/${tile}.pbf || exit 1
-md5f2=$(md5sum "${tile}.pbf" | cut -d' ' -f1)
-echo ${md5f2} > ${tile}.pbf.md5
-if [[ "$md5f2" == "$md5f1" ]]; then
-    echo "No new data"
-    exit 0
+if [ $? -eq 0 ]; then
+  echo "using sql dump"
+  gunzip "${tile}.sql.gz"
+  sqldump=1
+else
+  md5f1=""
+
+  if [[ -f ${tile}.pbf.md5 ]]; then
+      md5f1=$(cat "${tile}.pbf.md5")
+  fi
+  wget -N https://map-data.de/extract/${tile}.pbf || exit 1
+  md5f2=$(md5sum "${tile}.pbf" | cut -d' ' -f1)
+  echo ${md5f2} > ${tile}.pbf.md5
+  if [[ "$md5f2" == "$md5f1" ]]; then
+      echo "No new data"
+      exit 0
+  fi
+
+  echo "CREATE DATABASE \"${database}\" OWNER ${database_user} TABLESPACE ${tablespace};"| psql -Xq -p  ${database_port} -U ${database_user} -h ${dbhost}
+  echo "CREATE EXTENSION postgis; CREATE EXTENSION hstore;"| psql -Xq -p  ${database_port} -U ${database_user} -h ${dbhost} -d ${database}
+  sqldump=0
 fi
 
-echo "CREATE DATABASE \"${database}\" OWNER ${database_user} TABLESPACE ${tablespace};"| psql -Xq -p  ${database_port} -U ${database_user} -h ${dbhost}
-echo "CREATE EXTENSION postgis; CREATE EXTENSION hstore;"| psql -Xq -p  ${database_port} -U ${database_user} -h ${dbhost} -d ${database}
 if [[ ! -d vector-datasource-${vectorDatasourceVersion} ]]; then
     git clone https://github.com/mapzen/vector-datasource.git vector-datasource-${vectorDatasourceVersion}
     vector_cloned=1
@@ -54,26 +64,34 @@ if [[ ! -z ${new_venv+x} ]]; then
     pip install -r requirements.txt
     python setup.py develop
 fi
-
-osm2pgsql --slim --hstore-all -C 3000 -S osm2pgsql.style -d ${database} -P ${database_port} -U ${database_user} -H ${dbhost} --number-processes 4 --flat-nodes ../flat-nodes-file  ../${tile}.pbf || exit 1
-
-rm ../flat-nodes-file # TODO: for dynamic updating this file is needet
-rm ../${tile}.pbf
-
-cd data
-
 # TODO: bei fehlern am anfang macht er das hier gerne nicht
 if [[ ! -z ${new_venv+x} ]]; then
+    cd data
     python bootstrap.py
     make -f Makefile-import-data
+    cd ..
 fi
-./import-shapefiles.sh | psql -Xq -d ${database} -p ${database_port} -U ${database_user} -h ${dbhost}
-./perform-sql-updates.sh -d ${database} -p ${database_port} -h ${dbhost} -U ${database_user}
-cd ../..
 
+if [[ $sqldump -eq 0 ]]; then
+  osm2pgsql --slim --hstore-all -C 3000 -S osm2pgsql.style -d ${database} -P ${database_port} -U ${database_user} -H ${dbhost} --number-processes 4 --flat-nodes ../flat-nodes-file  ../${tile}.pbf || exit 1
 
-echo "DROP DATABASE \"${database_orig}\"" | psql -Xq -p  ${database_port} -U ${database_user} -h ${dbhost}
-echo "ALTER DATABASE \"${database}\" RENAME TO \"${database_orig}\"" | psql -Xq -p  ${database_port} -U ${database_user} -h ${dbhost}
+  rm ../flat-nodes-file # TODO: for dynamic updating this file is needet
+  rm ../${tile}.pbf
+
+  cd data
+
+  ./import-shapefiles.sh | psql -Xq -d ${database} -p ${database_port} -U ${database_user} -h ${dbhost}
+  ./perform-sql-updates.sh -d ${database} -p ${database_port} -h ${dbhost} -U ${database_user}
+  cd ../..
+
+  echo "DROP DATABASE \"${database_orig}\"" | psql -Xq -p  ${database_port} -U ${database_user} -h ${dbhost}
+  echo "ALTER DATABASE \"${database}\" RENAME TO \"${database_orig}\"" | psql -Xq -p  ${database_port} -U ${database_user} -h ${dbhost}
+else
+  cd ..
+  psql -p ${database_port} -U ${database_user} -h ${dbhost} -f ${tile}.sql
+  rm "${tile}.sql"
+fi
+
 sed "s/dbnames: \[osm\]/dbnames: \[${database_orig}\]/" tileserver-${tileserverVersion}/config.yaml.sample > tileserver-${tileserverVersion}/config.${tile}.yaml
 sed -i "s/password:/password: ${PGPASSWORD}/" tileserver-${tileserverVersion}/config.${tile}.yaml
 sed -i "s/vector-datasource/vector-datasource-${vectorDatasourceVersion}/" tileserver-${tileserverVersion}/config.${tile}.yaml
